@@ -1,0 +1,71 @@
+<?php
+// Decide which section to show after a form submit
+$section = $_POST['section'] ?? 'none';
+
+function isVisible($name, $current) {
+  return $name === $current ? 'block' : 'none';
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="petStyles.css" />
+  <title>Pet Sanctuary</title>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    #pet-bar { list-style: none; display: flex; gap: .75rem; padding: 0; }
+    #pet-bar a { text-decoration: none; }
+    form.inline { display: inline; margin-right: .5rem; }
+    #cv-section { max-width: 60ch; }
+  </style>
+</head>
+<body>
+
+  <ul id="pet-bar">
+    <li><a href="#">Home</a></li>
+    <li><a href="Book.php">Book</a></li>
+    <li><a href="Adopt.php">Adopt</a></li>
+    <li><a href="Profile.php">Profile</a></li>
+  </ul>
+
+  <h1 style="font-family: papyrus;">Pet sanctuary</h1>
+
+  <!-- Each "button" is a tiny form posting which section to show -->
+  <form class="inline" method="post">
+    <input type="hidden" name="section" value="mission">
+    <button type="submit">Mission statement</button>
+  </form>
+
+  <form class="inline" method="post">
+    <input type="hidden" name="section" value="location">
+    <button type="submit">Location</button>
+  </form>
+
+  <form class="inline" method="post">
+    <input type="hidden" name="section" value="contact">
+    <button type="submit">Contact</button>
+  </form>
+
+  <div id="missionDiv" style="display: <?= isVisible('mission', $section); ?>;">
+    <div id="cv-section">
+      <p>Pet Sanctuary specializes in adoption and therapy services for pets all over the United States</p>
+    </div>
+  </div>
+
+  <div id="locationDiv" style="display: <?= isVisible('location', $section); ?>;">
+    <div id="cv-section">
+      <p>Our headquarters are in Richmond, VA</p>
+    </div>
+  </div>
+
+  <div id="contactDiv" style="display: <?= isVisible('contact', $section); ?>;">
+    <div id="cv-section">
+      <p>Phone: 804-757-9480</p>
+      <p>Email: seepetsrun@gmail.com</p>
+    </div>
+  </div>
+
+</body>
+</html>
