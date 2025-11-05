@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forest Pet Sanctuary</title>
+    <title>Forest Pet Sanctuary - Home</title>
     <style>
         :root {
             --forest-green: #2d5a27;
@@ -114,6 +114,17 @@
             background-color: #e0c9a6;
         }
         
+        .btn-adopt {
+            background-color: var(--forest-green);
+            color: var(--white);
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .btn-adopt:hover {
+            background-color: var(--light-green);
+        }
+        
         .section {
             padding: 4rem 0;
         }
@@ -124,77 +135,59 @@
             color: var(--forest-green);
         }
         
-        .about {
-            background-color: var(--white);
-        }
-        
-        .about-content {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
+        .pets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 2rem;
+            margin-top: 2rem;
         }
         
-        .about-text {
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .about-image {
-            flex: 1;
-            min-width: 300px;
+        .pet-card {
+            background-color: var(--white);
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
         }
         
-        .about-image img {
+        .pet-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .pet-image {
             width: 100%;
-            height: auto;
-            display: block;
+            height: 200px;
+            object-fit: cover;
         }
         
-        .form-section {
-            background-color: var(--light-tan);
+        .pet-info {
+            padding: 1.5rem;
         }
         
-        .pet-form {
-            background-color: var(--white);
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+        .pet-name {
+            font-size: 1.4rem;
             color: var(--forest-green);
+            margin-bottom: 0.5rem;
         }
         
-        .form-group input {
-            width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
+        .pet-details {
+            margin-bottom: 1rem;
         }
         
-        .form-row {
+        .pet-detail {
             display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
+            margin-bottom: 0.5rem;
         }
         
-        .form-row .form-group {
-            flex: 1;
-            min-width: 200px;
+        .detail-label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+        
+        .pet-description {
+            margin-top: 1rem;
+            font-style: italic;
+            color: #666;
         }
         
         footer {
@@ -262,6 +255,10 @@
             .hero h1 {
                 font-size: 2rem;
             }
+            
+            .pets-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -276,11 +273,11 @@
                 </div>
                 <nav>
                     <ul>
-                        <li><a href="#">Home</a></li>
-                        <li><a href="#">About</a></li>
-                        <li><a href="#">Pets</a></li>
-                        <li><a href="#">Adoption</a></li>
-                        <li><a href="#">Contact</a></li>
+                        <li><a href="homepage.php">Home</a></li>
+                        <li><a href="about.php">About</a></li>
+                        <li><a href="adopt.php">Adopt</a></li>
+                        <li><a href="add_pet.php">Add Pet</a></li>
+                        <li><a href="contact.php">Contact</a></li>
                     </ul>
                 </nav>
             </div>
@@ -289,118 +286,94 @@
     
     <section class="hero">
         <div class="container">
-            <h1>Welcome to Forest Pet Sanctuary</h1>
-            <p>A safe haven for animals in need of love, care, and forever homes. Join us in our mission to rescue, rehabilitate, and rehome pets.</p>
-            <a href="#pet-form" class="btn">Add a New Pet</a>
+            <h1>Find Your New Best Friend</h1>
+            <p>Browse our wonderful pets waiting for their forever homes. Each one has a unique story and is ready to bring joy to your life.</p>
         </div>
     </section>
     
-    <section class="section about">
+    <section id="pets" class="section">
         <div class="container">
-            <h2 class="section-title">About Our Sanctuary</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p>Forest Pet Sanctuary is dedicated to providing a safe and nurturing environment for animals in need. Our team of dedicated professionals and volunteers work tirelessly to ensure every pet receives the care and attention they deserve.</p>
-                    <p>We believe that every animal deserves a loving home, and we work to match our rescued pets with families who will provide them with the care and companionship they need to thrive.</p>
-                    <p>Our sanctuary specializes in rescuing and rehabilitating pets from various situations, providing medical care, behavioral training, and lots of love before they're ready for adoption.</p>
-                </div>
-                <div class="about-image">
-                    <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Happy pets at our sanctuary">
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <section id="pet-form" class="section form-section">
-        <div class="container">
-            <h2 class="section-title">Add a New Pet to Our Sanctuary</h2>
-            <div class="pet-form">
+            <h2 class="section-title">Featured Pets</h2>
+            <div class="pets-grid">
                 <?php
-                if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                    $servername = "localhost";
-                    $username = "root";
-                    $password = "";
-                    $dbname = "pet_sanctuary";
+                // Database connection
+                $servername = "localhost";
+                $username = "root";
+                $password = "";
+                $dbname = "pet_sanctuary";
+                
+                $conn = new mysqli($servername, $username, $password, $dbname);
+                
+                if ($conn->connect_error) {
+                    echo "<div style='color: red; text-align: center;'>Connection failed: " . $conn->connect_error . "</div>";
+                } else {
+                    // Fetch pets from database that are available for adoption
+                    $sql = "SELECT p.*, a.Adoption_status 
+                            FROM Pets p 
+                            LEFT JOIN adoption a ON p.Pet_ID = a.Pet_ID 
+                            WHERE a.Adoption_status IS NULL OR a.Adoption_status = 'Available' 
+                            LIMIT 6";
+                    $result = $conn->query($sql);
                     
-                    $conn = new mysqli($servername, $username, $password, $dbname);
-                    
-                    if ($conn->connect_error) {
-                        echo "<div style='color: red; margin-bottom: 1rem;'>Connection failed: " . $conn->connect_error . "</div>";
-                    } else {
-                        $Pet_ID = $_POST['Pet_ID'];
-                        $Pet_type = $_POST['Pet_type'];
-                        $Pet_Name = $_POST['Pet_Name'];
-                        $Age_Years = $_POST['Age_Years'];
-                        $Vaccinations = $_POST['Vaccinations'];
-                        $Environment_condition = $_POST['Environment_condition'];
-                        $Adoption_requirements = $_POST['Adoption_requirements'];
-                        $Booking_requirements = $_POST['Booking_requirements'];
-                        $Sex = $_POST['Sex'];
-                        
-                        $sql = "INSERT INTO Pets (Pet_ID, Pet_type, Pet_Name, Age_Years, Vaccinations, Environment_condition, Adoption_requirements, Booking_requirements, Sex)
-                        VALUES ('$Pet_ID', '$Pet_type', '$Pet_Name', '$Age_Years', '$Vaccinations', '$Environment_condition', '$Adoption_requirements', '$Booking_requirements', '$Sex')";
-                        
-                        if ($conn->query($sql) === TRUE) {
-                            echo "<div style='color: green; margin-bottom: 1rem;'>New pet added successfully!</div>";
-                        } else {
-                            echo "<div style='color: red; margin-bottom: 1rem;'>Error: " . $sql . "<br>" . $conn->error . "</div>";
+                    if ($result->num_rows > 0) {
+                        // Output data of each row
+                        while($row = $result->fetch_assoc()) {
+                            // Generate a placeholder image based on pet type
+                            $petType = strtolower($row["Pet_type"]);
+                            $imageUrl = "";
+                            
+                            // Map pet types to appropriate Unsplash images
+                            switch($petType) {
+                                case "dog":
+                                    $imageUrl = "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                                    break;
+                                case "cat":
+                                    $imageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                                    break;
+                                case "rabbit":
+                                    $imageUrl = "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                                    break;
+                                case "bird":
+                                    $imageUrl = "https://images.unsplash.com/photo-1522926193341-e9ffd686c60f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                                    break;
+                                default:
+                                    $imageUrl = "https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                            }
+                            
+                            echo '<div class="pet-card">';
+                            echo '<img src="' . $imageUrl . '" alt="' . $row["Pet_Name"] . '" class="pet-image">';
+                            echo '<div class="pet-info">';
+                            echo '<h3 class="pet-name">' . $row["Pet_Name"] . '</h3>';
+                            echo '<div class="pet-details">';
+                            echo '<div class="pet-detail"><span class="detail-label">Type:</span> ' . $row["Pet_type"] . '</div>';
+                            echo '<div class="pet-detail"><span class="detail-label">Age:</span> ' . $row["Age_Years"] . ' years</div>';
+                            echo '<div class="pet-detail"><span class="detail-label">Sex:</span> ' . $row["Sex"] . '</div>';
+                            echo '<div class="pet-detail"><span class="detail-label">Vaccinations:</span> ' . ($row["Vaccinations"] ? $row["Vaccinations"] . ' received' : 'Pending') . '</div>';
+                            echo '</div>';
+                            
+                            // Create description from database fields
+                            $description = "This " . strtolower($row["Pet_type"]) . " is looking for a loving home. ";
+                            if ($row["Environment_condition"]) {
+                                $description .= "They thrive in " . $row["Environment_condition"] . " environments. ";
+                            }
+                            if ($row["Adoption_requirements"]) {
+                                $description .= "Adoption requirements: " . $row["Adoption_requirements"] . ". ";
+                            }
+                            if ($row["Booking_requirements"]) {
+                                $description .= "Booking requirements: " . $row["Booking_requirements"] . ".";
+                            }
+                            
+                            echo '<p class="pet-description">' . $description . '</p>';
+                            echo '<a href="adopt.php" class="btn btn-adopt">Adopt ' . $row["Pet_Name"] . '</a>';
+                            echo '</div>';
+                            echo '</div>';
                         }
-                        
-                        $conn->close();
+                    } else {
+                        echo "<div style='text-align: center; width: 100%;'>No pets available for adoption at the moment.</div>";
                     }
+                    $conn->close();
                 }
                 ?>
-                <form method="POST" action="">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="Pet_ID">Pet ID:</label>
-                            <input type="text" id="Pet_ID" name="Pet_ID" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="Pet_type">Pet Type:</label>
-                            <input type="text" id="Pet_type" name="Pet_type" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="Pet_Name">Pet Name:</label>
-                            <input type="text" id="Pet_Name" name="Pet_Name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="Age_Years">Age (Years):</label>
-                            <input type="number" id="Age_Years" name="Age_Years">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="Vaccinations">Vaccinations:</label>
-                            <input type="number" id="Vaccinations" name="Vaccinations">
-                        </div>
-                        <div class="form-group">
-                            <label for="Sex">Sex (M/F):</label>
-                            <input type="text" id="Sex" name="Sex" maxlength="1">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="Environment_condition">Environment Condition:</label>
-                        <input type="text" id="Environment_condition" name="Environment_condition">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="Adoption_requirements">Adoption Requirements:</label>
-                        <input type="text" id="Adoption_requirements" name="Adoption_requirements">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="Booking_requirements">Booking Requirements:</label>
-                        <input type="text" id="Booking_requirements" name="Booking_requirements">
-                    </div>
-                    
-                    <button type="submit" class="btn">Add Pet</button>
-                </form>
             </div>
         </div>
     </section>

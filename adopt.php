@@ -322,10 +322,10 @@
                 <nav>
                     <ul>
                         <li><a href="homepage.php">Home</a></li>
-                        <li><a href="#">About</a></li>
+                        <li><a href="about.php">About</a></li>
                         <li><a href="adopt.php">Adopt</a></li>
-                        <li><a href="homepage.php#pet-form">Add Pet</a></li>
-                        <li><a href="#">Contact</a></li>
+                        <li><a href="add_pet.php">Add Pet</a></li>
+                        <li><a href="contact.php">Contact</a></li>
                     </ul>
                 </nav>
             </div>
@@ -349,25 +349,27 @@
             $username = "root";
             $password = "";
             $dbname = "pet_sanctuary";
-            
+
             $conn = new mysqli($servername, $username, $password, $dbname);
-            
+
             if ($conn->connect_error) {
                 echo "<div style='color: red; text-align: center;'>Connection failed: " . $conn->connect_error . "</div>";
             } else {
-                // JOIN query using EXACT column names from your database
+                // JOIN query using ONLY the columns that exist in your adoption table
                 $sql = "SELECT p.Pet_ID, p.Pet_type, p.Pet_Name, p.Age_Years, p.Vaccinations, 
                                p.Environment_condition, p.Adoption_requirements, p.Booking_requirements, p.Sex,
-                               a.Food_requirements, a.Notes, a.Adoption_status
+                               a.Food_requirements, a.Allergies, a.Adoption_status
                         FROM pets p 
-                        LEFT JOIN adoption a ON p.Pet_ID = a.Pet_ID";
+                        LEFT JOIN adoption a ON p.Pet_ID = a.Pet_ID
+                        WHERE a.Adoption_status IS NULL OR a.Adoption_status = 'Available' 
+                        OR a.Adoption_status = ''";
                 
                 $result = $conn->query($sql);
                 
                 if ($result->num_rows > 0) {
                     echo '<div class="pets-grid">';
                     
-                    // Output data of each row - ONLY from database
+                    // Output data of each row
                     while($row = $result->fetch_assoc()) {
                         // Generate image based on actual pet type from database
                         $petType = strtolower($row["Pet_type"]);
@@ -383,7 +385,7 @@
                         } elseif (strpos($petType, 'bird') !== false || strpos($petType, 'parrot') !== false) {
                             $imageUrl = "https://images.unsplash.com/photo-1522926193341-e9ffd686c60f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
                         } elseif (strpos($petType, 'snake') !== false) {
-                            $imageUrl = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+                            $imageUrl = "https://images.unsplash.com/photo-1522926193341-e9ffd686c60f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
                         } elseif (strpos($petType, 'tortoise') !== false || strpos($petType, 'turtle') !== false) {
                             $imageUrl = "https://images.unsplash.com/photo-1452857576997-f0f12cd77848?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
                         } elseif (strpos($petType, 'fish') !== false) {
@@ -394,6 +396,10 @@
                         
                         // Determine adoption status and button
                         $adoptionStatus = $row["Adoption_status"] ?? "Available";
+                        if (empty($adoptionStatus)) {
+                            $adoptionStatus = "Available";
+                        }
+                        
                         $statusClass = "";
                         $buttonText = "";
                         $buttonClass = "btn-adopt";
@@ -423,7 +429,7 @@
                                 $buttonClass = "btn-adopt";
                         }
                         
-                        // Display pet card using ONLY database data
+                        // Display pet card
                         echo '<div class="pet-card">';
                         echo '<img src="' . $imageUrl . '" alt="' . $row["Pet_Name"] . '" class="pet-image">';
                         echo '<div class="pet-info">';
@@ -440,9 +446,14 @@
                             echo '<div class="pet-detail"><span class="detail-label">Diet:</span> ' . $row["Food_requirements"] . '</div>';
                         }
                         
+                        // Show allergies if available
+                        if (!empty($row["Allergies"]) && $row["Allergies"] !== "None") {
+                            echo '<div class="pet-detail"><span class="detail-label">Allergies:</span> ' . $row["Allergies"] . '</div>';
+                        }
+                        
                         echo '</div>';
                         
-                        // Create description from ACTUAL database fields
+                        // Create description from available fields
                         $description = "";
                         if ($row["Environment_condition"]) {
                             $description .= "Environment: " . $row["Environment_condition"] . ". ";
@@ -453,9 +464,6 @@
                         if ($row["Booking_requirements"] && $row["Booking_requirements"] !== "none") {
                             $description .= "Booking: " . $row["Booking_requirements"] . ". ";
                         }
-                        if (!empty($row["Notes"]) && $row["Notes"] !== "None") {
-                            $description .= "Notes: " . $row["Notes"] . ".";
-                        }
                         
                         if (!empty($description)) {
                             echo '<p class="pet-description">' . $description . '</p>';
@@ -464,7 +472,7 @@
                         if ($disabled) {
                             echo '<button class="btn ' . $buttonClass . '" disabled>' . $buttonText . '</button>';
                         } else {
-                            echo '<button class="btn ' . $buttonClass . '" onclick="adoptPet(\'' . $row["Pet_ID"] . '\', \'' . $row["Pet_Name"] . '\')">' . $buttonText . '</button>';
+                            echo '<button class="btn ' . $buttonClass . '" onclick="adoptPet(\'' . $row["Pet_ID"] . '\', \'' . $row["Pet_Name"] . '\', this)">' . $buttonText . '</button>';
                         }
                         echo '</div>';
                         echo '</div>';
@@ -475,7 +483,7 @@
                     // Only show this if database is actually empty
                     echo '<div class="no-pets">';
                     echo '<h3>No pets available for adoption at the moment</h3>';
-                    echo '<p>Check back soon or <a href="homepage.php#pet-form">add a new pet</a> to our sanctuary.</p>';
+                    echo '<p>Check back soon or <a href="add_pet.php">add a new pet</a> to our sanctuary.</p>';
                     echo '</div>';
                 }
                 $conn->close();
@@ -517,21 +525,52 @@
         </div>
     </footer>
     
-    <script>
-        function adoptPet(petId, petName) {
-            if (confirm("Are you sure you want to adopt " + petName + "? Our team will contact you shortly to discuss the adoption process.")) {
-                // In a real application, this would update the database
-                alert("Thank you for your interest! We've received your adoption request for " + petName + " (ID: " + petId + "). Our team will contact you within 24 hours.");
-                
-                // Here you could add AJAX to update the adoption status to "pending"
-                // fetch('update_adoption_status.php', { method: 'POST', body: JSON.stringify({petId: petId, status: 'pending'}) });
-            }
+ 
+ <script>
+    function adoptPet(petId, petName, buttonElement) {
+        if (confirm("Are you sure you want to adopt " + petName + "? Our team will contact you shortly to discuss the adoption process.")) {
+            // Disable the button immediately
+            buttonElement.disabled = true;
+            buttonElement.textContent = "Processing...";
+            
+            // Send AJAX request to update database
+            fetch('update_adoption.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'petId=' + encodeURIComponent(petId) + '&petName=' + encodeURIComponent(petName)
+            })
+            .then(response => response.text())
+            .then(data => {
+                if (data.startsWith("success")) {
+                    // Extract Customer ID from response
+                    const parts = data.split("|");
+                    const customerId = parts[1] || "N/A";
+                    
+                    // Update button to show pending status
+                    buttonElement.textContent = "Adoption Pending";
+                    buttonElement.className = "btn btn-pending";
+                    alert("Thank you for your interest! We've received your adoption request for " + petName + " (Pet ID: " + petId + "). Your Customer ID: " + customerId + ". Our team will contact you within 24 hours.");
+                } else {
+                    // Re-enable button if there was an error
+                    buttonElement.disabled = false;
+                    buttonElement.textContent = "Adopt " + petName;
+                    alert("There was an error processing your request: " + data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Re-enable button if there was an error
+                buttonElement.disabled = false;
+                buttonElement.textContent = "Adopt " + petName;
+                alert("There was an error processing your request. Please try again.");
+            });
         }
-        
-        // Auto-refresh the page every 30 seconds to show real-time updates
-        setTimeout(function() {
-            window.location.reload();
-        }, 30000); // 30 seconds
-    </script>
-</body>
-</html>
+    }
+    
+    // Auto-refresh the page every 30 seconds to show real-time updates
+    setTimeout(function() {
+        window.location.reload();
+    }, 30000); // 30 seconds
+</script>  
