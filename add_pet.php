@@ -1,3 +1,21 @@
+<?php 
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    // Redirect to login page
+    header("Location: login.php?error=2");
+    exit();
+}
+
+// Check for success or error messages from insert_pet.php
+if (isset($_GET['success']) && $_GET['success'] == 1) {
+    $success_message = "Pet successfully added to the database!";
+}
+if (isset($_GET['error']) && $_GET['error'] == 1) {
+    $error_message = "Error adding pet. Please try again.";
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -286,7 +304,6 @@
                         <li><a href="about.php">About</a></li>
                         <li><a href="adopt.php">Adopt</a></li>
                         <li><a href="give_pet.php">Give Pet</a></li>
-                        <li><a href="add_pet.php">Add Pet</a></li>
                         <li><a href="contact.php">Contact</a></li>
                     </ul>
                 </nav>
@@ -310,6 +327,17 @@
                     <h3>Staff Information</h3>
                     <p>This form is for sanctuary staff use only. Please ensure all information is accurate before submitting.</p>
                 </div>
+                <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
+                 <div style="background-color: #d4edda; color: #155724; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; text-align: center;">
+                                      Pet successfully added to the database!
+                 </div>
+                <?php endif; ?>
+
+                <?php if (isset($_GET['error']) && $_GET['error'] == 1): ?>
+                 <div style="background-color: #f8d7da; color: #721c24; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; text-align: center;">
+                              Error adding pet. Please try again.
+                 </div>
+                <?php endif; ?>
                 
                 <form action="insert_pet.php" method="POST" id="petForm">
                     <div class="form-group">

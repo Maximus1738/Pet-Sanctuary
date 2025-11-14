@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -322,9 +325,15 @@
                 <nav>
                     <ul>
                         <li><a href="homepage.php">Home</a></li>
-                        <li><a href="about.php">About</a></li>
                         <li><a href="adopt.php">Adopt</a></li>
-                        <li><a href="add_pet.php">Add Pet</a></li>
+                        <?php if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
+                            <li><a href="add_pet.php">Add Pet</a></li>
+                            <li><a href="give_pet.php">Give Pet</a></li>
+                            <li><a href="logout.php">Logout (<?php echo $_SESSION['first_name']; ?>)</a></li>
+                        <?php else: ?>
+                            <li><a href="login.php">Login</a></li>
+                            <li><a href="register.php">Register</a></li>
+                        <?php endif; ?>
                         <li><a href="contact.php">Contact</a></li>
                     </ul>
                 </nav>
@@ -355,14 +364,36 @@
             if ($conn->connect_error) {
                 echo "<div style='color: red; text-align: center;'>Connection failed: " . $conn->connect_error . "</div>";
             } else {
-                // JOIN query using ONLY the columns that exist in your adoption table
-                $sql = "SELECT p.Pet_ID, p.Pet_type, p.Pet_Name, p.Age_Years, p.Vaccinations, 
-                               p.Environment_condition, p.Adoption_requirements, p.Booking_requirements, p.Sex,
-                               a.Food_requirements, a.Allergies, a.Adoption_status
-                        FROM pets p 
-                        LEFT JOIN adoption a ON p.Pet_ID = a.Pet_ID
-                        WHERE a.Adoption_status IS NULL OR a.Adoption_status = 'Available' 
-                        OR a.Adoption_status = ''";
+                // Check if user is logged in to determine which pets to show
+                if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+                    $user_id = $_SESSION['user_id'];
+                    $sql = "SELECT p.Pet_ID, p.Pet_type, p.Pet_Name, p.Age_Years, p.Vaccinations, 
+               p.Environment_condition, p.Adoption_requirements, p.Booking_requirements, p.Sex,
+               a.Adoption_status, a.Customer_Id
+        FROM pets p 
+        JOIN adoption a ON p.Pet_ID = a.Pet_ID
+        WHERE (a.Adoption_status = 'Available' OR (a.Adoption_status = 'Pending' AND a.Customer_Id = ?))";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("i", $user_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                } else {
+                    // For logged out users, only show available pets
+                    $sql = "SELECT p.Pet_ID, p.Pet_type, p.Pet_Name, p.Age_Years, p.Vaccinations, 
+                                   p.Environment_condition, p.Adoption_requirements, p.Booking_requirements, p.Sex,
+                                   a.Adoption_status
+                            FROM pets p 
+                            JOIN adoption a ON p.Pet_ID = a.Pet_ID
+                            WHERE a.Adoption_status = 'Available'";
+                    $result = $conn->query($sql);
+                }
+                
+                if ($result && $result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        error_log("Pet: " . $row["Pet_Name"] . " - Status: " . $row["Adoption_status"]);
+    }
+    $result->data_seek(0); // Reset pointer
+}
                 
                 $result = $conn->query($sql);
                 
@@ -525,52 +556,56 @@
         </div>
     </footer>
     
- 
- <script>
-    function adoptPet(petId, petName, buttonElement) {
-        if (confirm("Are you sure you want to adopt " + petName + "? Our team will contact you shortly to discuss the adoption process.")) {
-            // Disable the button immediately
-            buttonElement.disabled = true;
-            buttonElement.textContent = "Processing...";
+    <script>
+        function adoptPet(petId, petName, buttonElement) {
+            // Check if user is logged in
+            <?php if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true): ?>
+                alert("Please login to adopt a pet.");
+                window.location.href = "login.php?error=2";
+                return;
+            <?php endif; ?>
             
-            // Send AJAX request to update database
-            fetch('update_adoption.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'petId=' + encodeURIComponent(petId) + '&petName=' + encodeURIComponent(petName)
-            })
-            .then(response => response.text())
-            .then(data => {
-                if (data.startsWith("success")) {
-                    // Extract Customer ID from response
-                    const parts = data.split("|");
-                    const customerId = parts[1] || "N/A";
-                    
-                    // Update button to show pending status
-                    buttonElement.textContent = "Adoption Pending";
-                    buttonElement.className = "btn btn-pending";
-                    alert("Thank you for your interest! We've received your adoption request for " + petName + " (Pet ID: " + petId + "). Your Customer ID: " + customerId + ". Our team will contact you within 24 hours.");
-                } else {
+            if (confirm("Are you sure you want to adopt " + petName + "? Our team will contact you shortly to discuss the adoption process.")) {
+                // Disable the button immediately
+                buttonElement.disabled = true;
+                buttonElement.textContent = "Processing...";
+                
+                // Send AJAX request to update database
+                fetch('update_adoption.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'petId=' + encodeURIComponent(petId) + '&petName=' + encodeURIComponent(petName)
+                })
+                .then(response => response.text())
+                .then(data => {
+    console.log("Server response:", data); // Debug log
+    if (data.startsWith("success")) {
+        // Extract Customer ID from response
+        const parts = data.split("|");
+        const customerId = parts[1] || "N/A";
+        
+        // Update button to show pending status
+        buttonElement.textContent = "Adoption Pending";
+        buttonElement.className = "btn btn-pending";
+        alert("Thank you for your interest! We've received your adoption request for " + petName + " (Pet ID: " + petId + "). Your Customer ID: " + customerId + ". Our team will contact you within 24 hours.");
+    } else {
+        // Re-enable button if there was an error
+        buttonElement.disabled = false;
+        buttonElement.textContent = "Adopt " + petName;
+        alert("Error: " + data); // Show actual error message from server
+    }
+})
+                .catch(error => {
+                    console.error('Error:', error);
                     // Re-enable button if there was an error
                     buttonElement.disabled = false;
                     buttonElement.textContent = "Adopt " + petName;
-                    alert("There was an error processing your request: " + data);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Re-enable button if there was an error
-                buttonElement.disabled = false;
-                buttonElement.textContent = "Adopt " + petName;
-                alert("There was an error processing your request. Please try again.");
-            });
+                    alert("There was an error processing your request. Please try again.");
+                });
+            }
         }
-    }
-    
-    // Auto-refresh the page every 30 seconds to show real-time updates
-    setTimeout(function() {
-        window.location.reload();
-    }, 30000); // 30 seconds
-</script>  
+    </script>
+</body>
+</html>
