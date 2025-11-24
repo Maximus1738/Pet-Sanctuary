@@ -1,5 +1,81 @@
+
 <?php
 session_start();
+
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "pet_sanctuary";
+
+// Function to get featured pets (available for adoption)
+function getFeaturedPets($conn) {
+    $sql = "SELECT p.Pet_ID, p.Pet_type, p.Pet_Name, p.Age_Years, p.Sex, p.Vaccinations,
+                   a.Adoption_status
+            FROM pets p 
+            LEFT JOIN adoption a ON p.Pet_ID = a.Pet_ID
+            WHERE a.Adoption_status IS NULL OR a.Adoption_status = 'Available' 
+            OR a.Adoption_status = ''
+            ORDER BY RAND() LIMIT 6";
+    
+    $result = $conn->query($sql);
+    return $result;
+}
+
+// Function to get adopted pets for homepage (all adopted pets)
+function getAdoptedPets($conn) {
+    $sql = "SELECT p.Pet_ID, p.Pet_type, p.Pet_Name, p.Age_Years, p.Sex, p.Vaccinations,
+                   p.Environment_condition, p.Adoption_requirements, p.Booking_requirements,
+                   a.Adoption_status, u.First_name, u.Last_Name
+            FROM pets p 
+            JOIN adoption a ON p.Pet_ID = a.Pet_ID
+            JOIN users u ON a.Customer_Id = u.Customer_Id
+            WHERE a.Adoption_status = 'Adopted'
+            ORDER BY a.Adoption_ID DESC
+            LIMIT 6";
+    
+    $result = $conn->query($sql);
+    return $result;
+}
+
+
+
+// Function to get user's adopted pets (for logged-in users)
+function getUserAdoptedPets($conn, $user_id) {
+    $sql = "SELECT p.Pet_ID, p.Pet_type, p.Pet_Name, p.Age_Years, p.Sex, p.Vaccinations,
+                   p.Environment_condition, p.Adoption_requirements, p.Booking_requirements,
+                   a.Adoption_status
+            FROM pets p 
+            JOIN adoption a ON p.Pet_ID = a.Pet_ID
+            WHERE a.Customer_Id = ? AND a.Adoption_status = 'Adopted'
+            ORDER BY a.Adoption_ID DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result;
+}
+
+// Function to get pet image URL
+function getPetImage($petType) {
+    $petType = strtolower($petType);
+    $imageUrl = "https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+    
+    if (strpos($petType, 'dog') !== false) {
+        $imageUrl = "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+    } elseif (strpos($petType, 'cat') !== false) {
+        $imageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+    } elseif (strpos($petType, 'rabbit') !== false) {
+        $imageUrl = "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+    } elseif (strpos($petType, 'bird') !== false) {
+        $imageUrl = "https://images.unsplash.com/photo-1522926193341-e9ffd686c60f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+    } elseif (strpos($petType, 'turtle') !== false || strpos($petType, 'tortoise') !== false) {
+        $imageUrl = "https://images.unsplash.com/photo-1452857576997-f0f12cd77848?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
+    }
+    
+    return $imageUrl;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -389,6 +465,53 @@ session_start();
             margin-top: 2rem;
         }
         
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .status-adopted {
+            background-color: #e8f5e8;
+            color: var(--forest-green);
+        }
+        
+        .status-available {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .pet-details {
+            margin-bottom: 1rem;
+        }
+        
+        .pet-detail {
+            display: flex;
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+        
+        .pet-description {
+            margin-top: 1rem;
+            font-style: italic;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .adopted-by {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--light-green);
+            font-weight: 600;
+        }
+        
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -437,16 +560,16 @@ session_start();
                 <nav>
                     <ul>
                         <li><a href="homepage.php">Home</a></li>
-                        <li><a href="about.php">About</a></li>
-                        <li><a href="adopt.php">Adopt</a></li>
+                        <li><a href="booking.php">Booking</a></li>
                         <?php if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
                             <li><a href="add_pet.php">Give Pet</a></li>
+                            <li><a href="adopt.php">Adopt</a></li>
                             <li><a href="logout.php">Logout (<?php echo $_SESSION['first_name']; ?>)</a></li>
                         <?php else: ?>
                             <li><a href="login.php">Login</a></li>
                             <li><a href="register.php">Register</a></li>
                         <?php endif; ?>
-                        <li><a href="contact.php">Contact</a></li>
+                        
                     </ul>
                 </nav>
             </div>
@@ -460,7 +583,8 @@ session_start();
                 <p>Where every pet finds love, care, and a second chance at happiness. Join us in creating forever homes for our furry, feathered, and scaled friends.</p>
                 <div class="hero-buttons">
                     <a href="adopt.php" class="btn btn-primary">Adopt a Pet</a>
-                    <a href="about.php" class="btn btn-secondary">Learn More</a>
+                    <a href="booking.php" class="btn btn-primary">Bookings</a>
+                    <a href="add_pet.php" class="btn btn-primary">Give a Pet For Adoption</a>
                 </div>
             </div>
         </div>
@@ -533,49 +657,21 @@ session_start();
             </div>
             <div class="pets-grid">
                 <?php
-                // Database connection
-                $servername = "localhost";
-                $username = "root";
-                $password = "";
-                $dbname = "pet_sanctuary";
-                
                 $conn = new mysqli($servername, $username, $password, $dbname);
                 
                 if ($conn->connect_error) {
                     echo "<div style='color: red; text-align: center; width: 100%;'>Connection failed: " . $conn->connect_error . "</div>";
                 } else {
-                    // Fetch 6 random pets that are available for adoption
-                    $sql = "SELECT p.Pet_ID, p.Pet_type, p.Pet_Name, p.Age_Years, p.Sex, p.Vaccinations,
-                                   a.Adoption_status
-                            FROM pets p 
-                            LEFT JOIN adoption a ON p.Pet_ID = a.Pet_ID
-                            WHERE a.Adoption_status IS NULL OR a.Adoption_status = 'Available' 
-                            OR a.Adoption_status = ''
-                            ORDER BY RAND() LIMIT 6";
-                    
-                    $result = $conn->query($sql);
+                    $result = getFeaturedPets($conn);
                     
                     if ($result->num_rows > 0) {
                         while($row = $result->fetch_assoc()) {
-                            $petType = strtolower($row["Pet_type"]);
-                            $imageUrl = "https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
-                            
-                            // Image mapping
-                            if (strpos($petType, 'dog') !== false) {
-                                $imageUrl = "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
-                            } elseif (strpos($petType, 'cat') !== false) {
-                                $imageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
-                            } elseif (strpos($petType, 'rabbit') !== false) {
-                                $imageUrl = "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
-                            } elseif (strpos($petType, 'bird') !== false) {
-                                $imageUrl = "https://images.unsplash.com/photo-1522926193341-e9ffd686c60f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
-                            } elseif (strpos($petType, 'turtle') !== false || strpos($petType, 'tortoise') !== false) {
-                                $imageUrl = "https://images.unsplash.com/photo-1452857576997-f0f12cd77848?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
-                            }
+                            $imageUrl = getPetImage($row["Pet_type"]);
                             
                             echo '<div class="pet-card">';
                             echo '<img src="' . $imageUrl . '" alt="' . $row["Pet_Name"] . '" class="pet-image">';
                             echo '<div class="pet-info">';
+                            echo '<span class="status-badge status-available">Available</span>';
                             echo '<h3 class="pet-name">' . $row["Pet_Name"] . '</h3>';
                             echo '<p class="pet-type">' . $row["Pet_type"] . ' • ' . $row["Age_Years"] . ' years • ' . $row["Sex"] . '</p>';
                             echo '<a href="adopt.php" class="btn" style="width: 100%; margin-top: 1rem;">Meet ' . $row["Pet_Name"] . '</a>';
@@ -598,6 +694,76 @@ session_start();
         </div>
     </section>
     
+    <section class="section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Featured Friends</h2>
+            <p>Book a Friend Today</p>
+        </div>
+        <div class="pets-grid">
+            <?php
+            // Connect to the database
+            $conn = new mysqli($servername, $username, $password, $dbname);
+
+            if ($conn->connect_error) {
+                echo "<div style='color: red; text-align: center; width: 100%;'>Connection failed: " . $conn->connect_error . "</div>";
+            } else {
+                // Fetch pets with status 'Processed'
+                $sql = "SELECT Pet_ID, Pet_type, Pet_Name, Age_Years, Sex, Vaccinations,
+                               Environment_condition, Adoption_requirements, Booking_requirements
+                        FROM pets
+                        WHERE status = 'Processed'
+                        ORDER BY RAND()
+                        LIMIT 6";
+
+                $result = $conn->query($sql);
+
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        $imageUrl = getPetImage($row["Pet_type"]);
+
+                        echo '<div class="pet-card">';
+                        echo '<img src="' . $imageUrl . '" alt="' . $row["Pet_Name"] . '" class="pet-image">';
+                        echo '<div class="pet-info">';
+                        echo '<span class="status-badge status-available">Processed</span>';
+                        echo '<h3 class="pet-name">' . $row["Pet_Name"] . '</h3>';
+
+                        echo '<div class="pet-details">';
+                        echo '<div class="pet-detail"><span class="detail-label">Type:</span> ' . $row["Pet_type"] . '</div>';
+                        echo '<div class="pet-detail"><span class="detail-label">Age:</span> ' . $row["Age_Years"] . '</div>';
+                        echo '<div class="pet-detail"><span class="detail-label">Sex:</span> ' . $row["Sex"] . '</div>';
+                        echo '</div>';
+
+                        $description = "";
+                        if ($row["Environment_condition"]) $description .= "Environment: {$row["Environment_condition"]}. ";
+                        if ($row["Booking_requirements"]) $description .= "Booking Requirements: {$row["Booking_requirements"]}. ";
+
+                        if ($description !== "") {
+                            echo '<p class="pet-description">' . $description . '</p>';
+                        }
+
+                        echo '<a href="booking.php?pet_id=' . $row["Pet_ID"] . '" class="btn" style="width: 100%; margin-top: 1rem;">Book ' . $row["Pet_Name"] . '</a>';
+
+                        echo '</div>';
+                        echo '</div>';
+                    }
+                } else {
+                    echo '<div style="text-align: center; width: 100%; grid-column: 1 / -1;">';
+                    echo '<h3>No pets are available for booking right now</h3>';
+                    echo '<p>Check back soon to find your new friend!</p>';
+                    echo '</div>';
+                }
+
+                $conn->close();
+            }
+            ?>
+        </div>
+        <div style="text-align: center; margin-top: 3rem;">
+            <a href="booking.php" class="btn btn-primary">View All Booking Pets</a>
+        </div>
+    </div>
+</section>
+
     <section class="section testimonials">
         <div class="container">
             <div class="section-title">
@@ -645,13 +811,71 @@ session_start();
         </div>
     </section>
     
+    <?php if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
+    <section class="section section-light">
+        <div class="container">
+            <div class="section-title">
+                <h2>Pets You Took Home</h2>
+                <p>Your adopted companions and their happy stories</p>
+            </div>
+            <div class="pets-grid">
+                <?php
+                $conn = new mysqli($servername, $username, $password, $dbname);
+                
+                if ($conn->connect_error) {
+                    echo "<div style='color: red; text-align: center; width: 100%;'>Connection failed: " . $conn->connect_error . "</div>";
+                } else {
+                    $user_id = $_SESSION['Customer_Id'];
+                    $result = getUserAdoptedPets($conn, $user_id);
+                    
+                    if ($result->num_rows > 0) {
+                        while($row = $result->fetch_assoc()) {
+                            $imageUrl = getPetImage($row["Pet_type"]);
+                            
+                            echo '<div class="pet-card">';
+                            echo '<img src="' . $imageUrl . '" alt="' . $row["Pet_Name"] . '" class="pet-image">';
+                            echo '<div class="pet-info">';
+                            echo '<span class="status-badge status-adopted">Adopted</span>';
+                            echo '<h3 class="pet-name">' . $row["Pet_Name"] . '</h3>';
+                            
+                            echo '<div class="pet-details">';
+                            echo '<div class="pet-detail"><span class="detail-label">Type:</span> ' . $row["Pet_type"] . '</div>';
+                            echo '<div class="pet-detail"><span class="detail-label">Age:</span> ' . $row["Age_Years"] . '</div>';
+                            echo '<div class="pet-detail"><span class="detail-label">Sex:</span> ' . $row["Sex"] . '</div>';
+                            echo '</div>';
+                            
+                            $description = "";
+                            if ($row["Environment_condition"]) $description .= "Environment: {$row["Environment_condition"]}. ";
+                            if ($row["Adoption_requirements"]) $description .= "Requirements: {$row["Adoption_requirements"]}. ";
+                            
+                            if ($description !== "") {
+                                echo '<p class="pet-description">' . $description . '</p>';
+                            }
+                            
+                            echo '</div>';
+                            echo '</div>';
+                        }
+                    } else {
+                        echo '<div style="text-align: center; width: 100%; grid-column: 1 / -1;">';
+                        echo '<h3>You haven\'t adopted any pets yet</h3>';
+                        echo '<p>Visit our adoption page to find your perfect companion!</p>';
+                        echo '<a href="adopt.php" class="btn btn-primary" style="margin-top: 1rem;">Browse Pets</a>';
+                        echo '</div>';
+                    }
+                    $conn->close();
+                }
+                ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
+    
     <section class="cta">
         <div class="container">
             <h2>Ready to Make a Difference?</h2>
             <p>Whether you're looking to adopt, volunteer, or support our mission, there are many ways to get involved and help animals in need.</p>
             <div class="cta-buttons">
                 <a href="adopt.php" class="btn" style="background-color: var(--tan); color: var(--forest-green); margin-right: 1rem;">Adopt a Pet</a>
-                <a href="contact.php" class="btn btn-secondary">Contact Us</a>
             </div>
         </div>
     </section>
@@ -676,8 +900,8 @@ session_start();
                 <div class="footer-section">
                     <h3>Quick Links</h3>
                     <p><a href="adopt.php" style="color: var(--white); text-decoration: none;">Adopt a Pet</a></p>
-                    <p><a href="about.php" style="color: var(--white); text-decoration: none;">About Us</a></p>
-                    <p><a href="contact.php" style="color: var(--white); text-decoration: none;">Contact</a></p>
+                    <p><a href="booking.php" style="color: var(--white); text-decoration: none;">Booking</a></p>
+                    <p><a href="add_pet.php" style="color: var(--white); text-decoration: none;">Give a Pet</a></p>
                 </div>
                 
                 <div class="footer-section">

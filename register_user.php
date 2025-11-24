@@ -40,10 +40,35 @@ if (!empty($full_name) && !empty($email) && !empty($password)) {
     }
     $check_stmt->close();
     
-    // Insert new user using your existing table structure
-    $insert_sql = "INSERT INTO users (First_name, Last_Name, Email, Phone, Address, Password, Join_Date) VALUES (?, ?, ?, ?, ?, ?, CURDATE())";
+    // Generate sequential Customer_Id
+    $sql = "SELECT Customer_Id FROM users WHERE Customer_Id LIKE 'ID-%' ORDER BY CAST(SUBSTRING(Customer_Id, 4) AS UNSIGNED) DESC LIMIT 1";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $lastNumber = intval(substr($row['Customer_Id'], 3));
+        $newNumber = $lastNumber + 1;
+    } else {
+        $newNumber = 1;
+    }
+
+    $newId = 'ID-' . $newNumber;
+
+    // Double-check that ID still doesn't exist (safety)
+    $check = $conn->query("SELECT Customer_Id FROM users WHERE Customer_Id = '$newId'");
+    if ($check->num_rows > 0) {
+        while (true) {
+            $newNumber++;
+            $newId = 'ID-' . $newNumber;
+            $check = $conn->query("SELECT Customer_Id FROM users WHERE Customer_Id = '$newId'");
+            if ($check->num_rows == 0) break;
+        }
+    }
+    
+    // Insert new user
+    $insert_sql = "INSERT INTO users (Customer_Id, First_name, Last_Name, Email, Phone, Address, Password, Join_Date) VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())";
     $insert_stmt = $conn->prepare($insert_sql);
-    $insert_stmt->bind_param("ssssss", $first_name, $last_name, $email, $phone, $address, $password);
+    $insert_stmt->bind_param("sssssss", $newId, $first_name, $last_name, $email, $phone, $address, $password);
     
     if ($insert_stmt->execute()) {
         // Registration successful

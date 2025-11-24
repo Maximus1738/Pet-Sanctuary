@@ -291,7 +291,7 @@ if (isset($_GET['error']) && $_GET['error'] == 1) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header>
+<header>
         <div class="container">
             <div class="header-content">
                 <div class="logo">
@@ -301,10 +301,15 @@ if (isset($_GET['error']) && $_GET['error'] == 1) {
                 <nav>
                     <ul>
                         <li><a href="homepage.php">Home</a></li>
-                        <li><a href="about.php">About</a></li>
-                        <li><a href="adopt.php">Adopt</a></li>
-                        <li><a href="give_pet.php">Give Pet</a></li>
-                        <li><a href="contact.php">Contact</a></li>
+                        <li><a href="booking.php">Booking</a></li>
+                        <?php if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
+                            <li><a href="adopt.php">Adopt</a></li>
+                            <li><a href="logout.php">Logout (<?php echo $_SESSION['first_name']; ?>)</a></li>
+                        <?php else: ?>
+                            <li><a href="login.php">Login</a></li>
+                            <li><a href="register.php">Register</a></li>
+                        <?php endif; ?>
+                        
                     </ul>
                 </nav>
             </div>
@@ -422,7 +427,16 @@ if (isset($_GET['error']) && $_GET['error'] == 1) {
                         <label for="Booking_requirements">Booking/Meeting Requirements</label>
                         <input type="text" class="form-control" id="Booking_requirements" name="Booking_requirements" placeholder="Any specific requirements for meeting the pet (e.g., home visit, multiple visits, etc.)">
                     </div>
-                    
+                    <div class="form-group">
+                        <label for="food_requirements">Food Requirements *</label>
+                        <input type="text" class="form-control" id="food_requirements" name="food_requirements" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="allergies">Allergies *</label>
+                        <input type="text" class="form-control" id="allergies" name="allergies" required>
+                    </div>
+
                     <button type="submit" class="btn btn-submit">Add Pet to Database</button>
                 </form>
             </div>

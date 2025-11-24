@@ -1,5 +1,4 @@
-[file name]: authenticate.php
-[file content begin]
+
 <?php
 session_start();
 
@@ -35,7 +34,7 @@ if (!empty($email) && !empty($password)) {
         // Verify password (plain text comparison based on your table data)
         if ($password === $user['Password']) {
             // Set session variables
-            $_SESSION['user_id'] = $user['Customer_id'];
+            $_SESSION['Customer_Id'] = $user['Customer_id'];
             $_SESSION['first_name'] = $user['First_name'];
             $_SESSION['last_name'] = $user['Last_Name'];
             $_SESSION['email'] = $email;
@@ -64,4 +63,3 @@ if (!empty($email) && !empty($password)) {
 
 $conn->close();
 ?>
-[file content end]

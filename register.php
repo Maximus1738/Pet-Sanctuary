@@ -207,10 +207,9 @@
                 <nav>
                     <ul>
                         <li><a href="homepage.php">Home</a></li>
-                        <li><a href="about.php">About</a></li>
                         <li><a href="adopt.php">Adopt</a></li>
                         <li><a href="login.php">Login</a></li>
-                        <li><a href="contact.php">Contact</a></li>
+                        <li><a href="booking.php">Booking</a></li>
                     </ul>
                 </nav>
             </div>
