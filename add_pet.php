@@ -403,14 +403,16 @@ if (isset($_GET['error']) && $_GET['error'] == 1) {
                     </div>
                     
                     <div class="form-group">
-                        <label for="Vaccinations">Vaccination Status *</label>
-                        <select class="form-control" id="Vaccinations" name="Vaccinations" required>
-                            <option value="">Select Vaccination Status</option>
-                            <option value="Up to date">Up to date</option>
-                            <option value="Partially vaccinated">Partially vaccinated</option>
-                            <option value="Not vaccinated">Not vaccinated</option>
-                            <option value="Unknown">Unknown</option>
-                        </select>
+                            <label for="Vaccinations">Number of Vaccinations *</label>
+                                <select class="form-control" id="Vaccinations" name="Vaccinations" required>
+                                    <option value="">Select number of vaccinations</option>
+                                    <option value="0">0 (Not vaccinated)</option>
+                                    <option value="1">1 </option>
+                                    <option value="2">2 </option>
+                                    <option value="3">3 (Partially vaccinated)</option>
+                                    <option value="4">4 </option>
+                                    <option value="5">5 (Fully vaccinated) </option>
+                                </select>
                     </div>
                     
                     <div class="form-group">

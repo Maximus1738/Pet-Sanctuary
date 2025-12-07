@@ -1,5 +1,4 @@
-[file name]: login.php
-[file content begin]
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -266,4 +265,3 @@
     </footer>
 </body>
 </html>
-[file content end]

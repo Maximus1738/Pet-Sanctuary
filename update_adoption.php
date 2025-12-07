@@ -15,6 +15,16 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Function to sync pets.status to 'unavailable'
+// This replaces the problematic database trigger logic
+function syncPetStatusToUnavailable($conn, $petId) {
+    $syncSql = "UPDATE pets SET status = 'unavailable' WHERE Pet_ID = ?";
+    $syncStmt = $conn->prepare($syncSql);
+    $syncStmt->bind_param("s", $petId);
+    $syncStmt->execute();
+    $syncStmt->close();
+}
+
 // Check if user is logged in
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     echo "error: Please login to adopt a pet";
@@ -73,6 +83,8 @@ if (!empty($petId) && !empty($userId)) {
                 $insertStmt->bind_param("ss", $petId, $userId);
                 
                 if ($insertStmt->execute()) {
+                    // SUCCESS: Sync status in pets table
+                    syncPetStatusToUnavailable($conn, $petId);
                     echo "success|" . $userId;
                 } else {
                     echo "error: Failed to create adoption record: " . $insertStmt->error;
@@ -85,6 +97,8 @@ if (!empty($petId) && !empty($userId)) {
                 $updateStmt->bind_param("ss", $userId, $petId);
                 
                 if ($updateStmt->execute()) {
+                    // SUCCESS: Sync status in pets table
+                    syncPetStatusToUnavailable($conn, $petId);
                     echo "success|" . $userId;
                 } else {
                     echo "error: Failed to update adoption record: " . $updateStmt->error;
@@ -106,7 +120,8 @@ if (!empty($petId) && !empty($userId)) {
         $checkPetStmt->close();
         
     } catch (Exception $e) {
-        echo "error: Database error: " . $e->getMessage();
+        // Output a generic error message, but log the detailed database error
+        echo "error: Failed to adopt Nemo: Database error: " . $e->getMessage();
     }
 } else {
     if (empty($petId)) {
